@@ -61,7 +61,6 @@ module "wrapper" {
   placement_partition_number = try(each.value.placement_partition_number, var.defaults.placement_partition_number, null)
   private_dns_name_options   = try(each.value.private_dns_name_options, var.defaults.private_dns_name_options, null)
   private_ip                 = try(each.value.private_ip, var.defaults.private_ip, null)
-  region                     = try(each.value.region, var.defaults.region, null)
   root_block_device          = try(each.value.root_block_device, var.defaults.root_block_device, null)
   secondary_private_ips      = try(each.value.secondary_private_ips, var.defaults.secondary_private_ips, null)
   security_group_description = try(each.value.security_group_description, var.defaults.security_group_description, null)
