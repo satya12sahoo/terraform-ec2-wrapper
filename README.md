@@ -2,6 +2,7 @@
 
 A comprehensive wrapper module around [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) that provides simplified multi-instance management with advanced features including IAM instance profile management, CloudWatch monitoring, and comprehensive logging.
 
+
 ## 🚀 Features
 
 - **Multi-Instance Management**: Create multiple EC2 instances with shared defaults and individual overrides
@@ -13,9 +14,20 @@ A comprehensive wrapper module around [terraform-aws-ec2-instance](https://githu
 - **Complete Output Exposure**: All outputs from underlying modules are available
 - **Backward Compatible**: Maintains compatibility with existing configurations
 
-## 📖 Usage
+## 📋 Table of Contents
 
-### Basic Example
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [Usage Examples](#usage-examples)
+- [Inputs](#inputs)
+- [Outputs](#outputs)
+- [Requirements](#requirements)
+- [Modules](#modules)
+- [License](#license)
+
+## 🏃‍♂️ Quick Start
+
+### Basic Multi-Instance Setup
 
 ```hcl
 module "ec2_instances" {
@@ -33,22 +45,124 @@ module "ec2_instances" {
   items = {
     web-server-1 = {
       name = "web-server-1"
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     web-server-2 = {
       name = "web-server-2"
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     database-server = {
       name         = "database-server"
       instance_type = "t3.small"
-      tags = {
-        Role = "database"
-      }
+      tags = { Role = "database" }
+    }
+  }
+}
+```
+
+### With IAM Instance Profile Management
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable instance profile creation for existing roles
+    create_instance_profiles_for_existing_roles = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      # Existing IAM role name
+      iam_role_name = "existing-web-role"
+      # Instance profile will be created automatically
+      instance_profile_name = "web-instance-profile"
+      tags = { Role = "web-server" }
+    }
+    
+    app-server = {
+      name = "app-server"
+      iam_role_name = "existing-app-role"
+      instance_profile_name = "app-instance-profile"
+      tags = { Role = "app-server" }
+    }
+  }
+}
+```
+
+### With Comprehensive Monitoring
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable monitoring
+    create_monitoring = true
+    
+    # CPU monitoring
+    create_cpu_alarm = true
+    cpu_threshold = 75
+    cpu_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Memory monitoring (requires CloudWatch Agent)
+    create_memory_alarm = true
+    memory_threshold = 80
+    memory_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Disk monitoring (requires CloudWatch Agent)
+    create_disk_alarm = true
+    disk_threshold = 85
+    disk_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Network monitoring
+    create_network_in_alarm = true
+    create_network_out_alarm = true
+    network_in_threshold = 500000000  # 500 MB
+    network_out_threshold = 500000000
+    
+    # Status check monitoring
+    create_status_check_alarm = true
+    status_check_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Dashboard
+    create_dashboard = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      # Instance-specific monitoring overrides
+      cpu_threshold = 70  # Lower threshold for web server
+      memory_threshold = 75
+      tags = { Role = "web-server" }
+    }
+    
+    database-server = {
+      name = "database-server"
+      instance_type = "t3.small"
+      # Conservative thresholds for database
+      cpu_threshold = 60
+      memory_threshold = 70
+      disk_threshold = 80
+      tags = { Role = "database" }
     }
   }
 }
@@ -227,12 +341,6 @@ module "ec2_instances" {
       }
     }
     
-    # IAM configuration
-    create_iam_instance_profile = true
-    iam_role_policies = {
-      s3_read_only = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-    }
-    
     tags = {
       Environment = "production"
       Project     = "my-project"
@@ -243,7 +351,7 @@ module "ec2_instances" {
     web-server = {
       name = "web-server"
       
-      # Override security group for this instance
+      # Web server specific ingress rules
       security_group_ingress_rules = {
         http = {
           from_port   = 80
@@ -261,16 +369,14 @@ module "ec2_instances" {
         }
       }
       
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     
     database-server = {
       name         = "database-server"
       instance_type = "t3.small"
       
-      # Override security group for database
+      # Database specific ingress rules
       security_group_ingress_rules = {
         postgres = {
           from_port   = 5432
@@ -281,15 +387,13 @@ module "ec2_instances" {
         }
       }
       
-      tags = {
-        Role = "database"
-      }
+      tags = { Role = "database" }
     }
   }
 }
 ```
 
-### Spot Instance Example
+### Spot Instance Configuration
 
 ```hcl
 module "ec2_instances" {
@@ -322,6 +426,7 @@ module "ec2_instances" {
   }
 }
 ```
+
 
 ## 📋 Inputs
 
@@ -539,6 +644,7 @@ The following variables can be used in both `defaults` and `items` objects. Valu
 
 ### EBS Volume Outputs
 
+
 | Name | Description |
 |------|-------------|
 | `ebs_volumes` | Map of EBS volumes created and their attributes |
@@ -592,6 +698,24 @@ The following variables can be used in both `defaults` and `items` objects. Valu
 | `logging_alarm_arns` | Map of logging alarm ARNs for each instance |
 | `logging_summaries` | Map of logging summaries for each instance |
 
+### Instance Profile Outputs (for existing IAM roles)
+
+- `instance_profiles` - Map of all instance profile resources
+- `instance_profile_names` - Map of instance profile names
+- `instance_profile_arns` - Map of instance profile ARNs
+- `instance_profile_ids` - Map of instance profile IDs
+- `instance_profile_unique_ids` - Map of instance profile unique IDs
+
+### Monitoring Outputs
+
+- `monitoring_alarms` - Map of monitoring alarms for each instance
+- `monitoring_alarm_arns` - Map of monitoring alarm ARNs
+- `monitoring_alarm_names` - Map of monitoring alarm names
+- `monitoring_dashboards` - Map of monitoring dashboards
+- `monitoring_dashboard_names` - Map of monitoring dashboard names
+- `monitoring_dashboard_arns` - Map of monitoring dashboard ARNs
+- `monitoring_summaries` - Map of monitoring summaries
+
 ### Block Device Outputs
 
 | Name | Description |
@@ -600,30 +724,43 @@ The following variables can be used in both `defaults` and `items` objects. Valu
 | `ebs_block_devices` | Map of EBS block device information |
 | `ephemeral_block_devices` | Map of ephemeral block device information |
 
-## Requirements
+### Security Group Outputs
+
+- `security_group_ids` - Map of security group IDs
+- `security_group_arns` - Map of security group ARNs
+- `security_group_names` - Map of security group names
+
+### EIP Outputs
+
+- `eip_ids` - Map of EIP IDs
+- `eip_arns` - Map of EIP ARNs
+- `eip_public_ips` - Map of EIP public IPs
+- `eip_public_dns` - Map of EIP public DNS names
+
+### Deployment Summary
+
+- `deployment_summary` - Summary of all deployed resources
+
+## 📋 Requirements
 
 | Name | Version |
 |------|---------|
 | terraform | >= 1.5.7 |
 | aws | >= 6.0 |
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| aws | >= 6.0 |
-
-## Modules
+## 🔧 Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | wrapper | github.com/satya12sahoo/terraform-aws-ec2-instance | n/a |
+| iam_instance_profiles | ../terraform-aws-ec2-base/iam | n/a |
+| instance_monitoring | ../terraform-aws-ec2-base/monitoring | n/a |
 
-## License
+## 📄 License
 
 This module is licensed under the same license as the underlying `terraform-aws-ec2-instance` module.
 
-## Contributing
+## 🤝 Contributing
 
 This module is a wrapper around the official AWS EC2 instance module. For issues related to the core EC2 functionality, please refer to the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) repository.
 # Updated at Thu Aug 21 23:17:32 IST 2025
