@@ -6,7 +6,7 @@
 
 # Create logging resources for each EC2 instance
 module "instance_logging" {
-  source = "satya12sahoo/terraform-aws-ec2-base/tree/master/logging"
+  source = "github.com/satya12sahoo/terraform-aws-ec2-base/tree/master/logging"
   for_each = try(var.defaults.create_logging, false) ? var.items : {}
 
   # Instance information
@@ -142,3 +142,4 @@ module "instance_logging" {
   # Custom Log Alarms
   custom_log_alarms = try(each.value.custom_log_alarms, try(var.defaults.custom_log_alarms, {}))
 }
+
