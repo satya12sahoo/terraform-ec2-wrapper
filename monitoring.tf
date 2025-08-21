@@ -6,7 +6,7 @@
 
 # Create monitoring resources for each EC2 instance
 module "instance_monitoring" {
-  source = "github.com/satya12sahoo/terraform-aws-ec2-base/tree/master/monitoring"
+  source = "git::https://github.com/satya12sahoo/terraform-aws-ec2-base.git//monitoring?ref=master"
   for_each = try(var.defaults.create_monitoring, false) ? var.items : {}
 
   # Instance information
@@ -77,4 +77,5 @@ module "instance_monitoring" {
   create_dashboard = try(each.value.create_dashboard, try(var.defaults.create_dashboard, true))
   dashboard_name = try(each.value.dashboard_name, "${each.key}-dashboard")
 }
+
 
