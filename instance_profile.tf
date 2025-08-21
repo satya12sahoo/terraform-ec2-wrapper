@@ -6,7 +6,7 @@
 
 # Create instance profiles for existing IAM roles
 module "iam_instance_profiles" {
-  source = "github.com/satya12sahoo/terraform-aws-ec2-base/blob/master/iam"
+  source = "git::https://github.com/satya12sahoo/terraform-aws-ec2-base.git//iam?ref=master"
   for_each = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? var.items : {}
 
   # Instance profile configuration
@@ -34,3 +34,4 @@ module "iam_instance_profiles" {
   enable_instance_profile_rotation = try(each.value.enable_instance_profile_rotation, false)
   instance_profile_permissions_boundary = try(each.value.instance_profile_permissions_boundary, null)
 }
+
