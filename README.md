@@ -1,16 +1,19 @@
 # Terraform AWS EC2 Instance Wrapper
 
-This module is a wrapper around the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) module that provides a simplified interface for creating multiple EC2 instances with shared defaults.
+A comprehensive wrapper module around [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) that provides simplified multi-instance management with advanced features including IAM instance profile management, CloudWatch monitoring, and comprehensive logging.
 
-## Features
+## 🚀 Features
 
-- **Simplified Configuration**: Create multiple EC2 instances with shared default values
+- **Multi-Instance Management**: Create multiple EC2 instances with shared defaults and individual overrides
+- **IAM Instance Profile Management**: Create instance profiles for existing IAM roles
+- **CloudWatch Monitoring**: Comprehensive monitoring with alarms and dashboards
+- **CloudWatch Logging**: Complete logging solution with log groups, streams, and alarms
 - **Type Safety**: Full type definitions for all variables and outputs
-- **Flexible Overrides**: Override any default value on a per-instance basis
-- **Complete Output Exposure**: All outputs from the underlying module are available
+- **Flexible Configuration**: Override any default value on a per-instance basis
+- **Complete Output Exposure**: All outputs from underlying modules are available
 - **Backward Compatible**: Maintains compatibility with existing configurations
 
-## Usage
+## 📖 Usage
 
 ### Basic Example
 
@@ -43,6 +46,159 @@ module "ec2_instances" {
     database-server = {
       name         = "database-server"
       instance_type = "t3.small"
+      tags = {
+        Role = "database"
+      }
+    }
+  }
+}
+```
+
+### IAM Instance Profile Management Example
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable instance profile creation for existing IAM roles
+    create_instance_profiles_for_existing_roles = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      
+      # IAM role details for instance profile creation
+      iam_role_name = "existing-web-role"
+      instance_profile_name = "web-instance-profile"
+      
+      tags = {
+        Role = "web-server"
+      }
+    }
+    
+    database-server = {
+      name = "database-server"
+      instance_type = "t3.small"
+      
+      # Different IAM role for database
+      iam_role_name = "existing-db-role"
+      instance_profile_name = "db-instance-profile"
+      
+      tags = {
+        Role = "database"
+      }
+    }
+  }
+}
+```
+
+### Monitoring Example
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable monitoring
+    create_monitoring = true
+    
+    # Monitoring configuration
+    create_cpu_alarm = true
+    cpu_threshold = 80
+    cpu_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    create_status_check_alarm = true
+    status_check_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    create_dashboard = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      cpu_threshold = 75  # Override for web server
+      tags = {
+        Role = "web-server"
+      }
+    }
+    
+    database-server = {
+      name = "database-server"
+      instance_type = "t3.small"
+      cpu_threshold = 85  # Different threshold for database
+      tags = {
+        Role = "database"
+      }
+    }
+  }
+}
+```
+
+### Logging Example
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable logging
+    create_logging = true
+    
+    # Log group configuration
+    create_application_log_group = true
+    create_system_log_group = true
+    create_error_log_group = true
+    
+    # Metric filters
+    create_error_metric_filter = true
+    create_access_metric_filter = true
+    
+    # Log alarms
+    create_error_log_alarm = true
+    error_log_alarm_threshold = 5
+    error_log_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      error_log_alarm_threshold = 3  # Lower threshold for web server
+      tags = {
+        Role = "web-server"
+      }
+    }
+    
+    database-server = {
+      name = "database-server"
+      instance_type = "t3.small"
+      error_log_alarm_threshold = 2  # Very low threshold for database
+      error_log_retention_days = 120  # Longer retention for database
       tags = {
         Role = "database"
       }
@@ -167,16 +323,19 @@ module "ec2_instances" {
 }
 ```
 
-## Inputs
+## 📋 Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| `defaults` | Map of default values which will be used for each item | `any` | `{}` | no |
-| `items` | Maps of items to create instances from. Values are passed through to the module | `any` | `{}` | no |
+| `defaults` | Map of default values which will be used for each item. Contains shared configuration for all instances. All variables from terraform-aws-ec2-instance and terraform-aws-ec2-base modules can be used here. | `any` | `{}` | no |
+| `items` | Maps of items to create instances from. Values are passed through to the underlying terraform-aws-ec2-instance module. All variables from terraform-aws-ec2-instance and terraform-aws-ec2-base modules can be used here. | `any` | `{}` | no |
+| `create_instance_profiles_for_existing_roles` | Toggle flag to enable/disable instance profile creation for existing IAM roles. When true, the wrapper will create instance profiles for existing IAM roles specified in items. | `bool` | `false` | no |
 
-### Supported Variables in `defaults` and `items`
+### 🔧 Supported Variables in `defaults` and `items`
 
 The following variables can be used in both `defaults` and `items` objects. Values in `items` will override corresponding values in `defaults`:
+
+#### Core EC2 Instance Variables
 
 | Variable | Description | Type | Default Value |
 |----------|-------------|------|---------------|
@@ -261,54 +420,185 @@ The following variables can be used in both `defaults` and `items` objects. Valu
 | `volume_tags` | A mapping of tags to assign to the devices created by the instance at launch time | `map(string)` | `{}` |
 | `vpc_security_group_ids` | A list of security group IDs to associate with | `list(string)` | `[]` |
 
-## Outputs
+#### IAM Instance Profile Management Variables
 
-### `wrapper`
+| Variable | Description | Type | Default Value |
+|----------|-------------|------|---------------|
+| `create_instance_profiles_for_existing_roles` | Enable instance profile creation for existing IAM roles | `bool` | `false` |
+| `iam_role_name` | Name of existing IAM role to create instance profile for | `string` | `null` |
+| `instance_profile_name` | Name for the created instance profile | `string` | `null` |
+| `instance_profile_path` | Path for the instance profile | `string` | `"/"` |
+| `instance_profile_description` | Description for the instance profile | `string` | `null` |
+| `instance_profile_tags` | Tags for the instance profile | `map(string)` | `{}` |
+| `enable_instance_profile_rotation` | Enable instance profile rotation | `bool` | `false` |
+| `instance_profile_permissions_boundary` | Permissions boundary for instance profile | `string` | `null` |
 
-Map of all outputs from the underlying module for each instance.
+#### CloudWatch Monitoring Variables
+
+| Variable | Description | Type | Default Value |
+|----------|-------------|------|---------------|
+| `create_monitoring` | Enable CloudWatch monitoring | `bool` | `false` |
+| `create_cpu_alarm` | Create CPU utilization alarm | `bool` | `true` |
+| `cpu_threshold` | CPU utilization threshold percentage | `number` | `80` |
+| `cpu_evaluation_periods` | Number of evaluation periods for CPU alarm | `number` | `2` |
+| `cpu_period` | Period in seconds for CPU alarm | `number` | `300` |
+| `cpu_alarm_actions` | Actions to take when CPU alarm triggers | `list(string)` | `[]` |
+| `create_memory_alarm` | Create memory utilization alarm | `bool` | `false` |
+| `memory_threshold` | Memory utilization threshold percentage | `number` | `85` |
+| `create_disk_alarm` | Create disk utilization alarm | `bool` | `false` |
+| `disk_threshold` | Disk utilization threshold percentage | `number` | `85` |
+| `create_network_in_alarm` | Create network in alarm | `bool` | `false` |
+| `create_network_out_alarm` | Create network out alarm | `bool` | `false` |
+| `create_status_check_alarm` | Create status check alarm | `bool` | `true` |
+| `create_dashboard` | Create CloudWatch dashboard | `bool` | `true` |
+| `dashboard_name` | Name for the CloudWatch dashboard | `string` | `null` |
+
+#### CloudWatch Logging Variables
+
+| Variable | Description | Type | Default Value |
+|----------|-------------|------|---------------|
+| `create_logging` | Enable CloudWatch logging | `bool` | `false` |
+| `create_application_log_group` | Create application log group | `bool` | `false` |
+| `application_log_retention_days` | Retention days for application logs | `number` | `30` |
+| `create_system_log_group` | Create system log group | `bool` | `false` |
+| `system_log_retention_days` | Retention days for system logs | `number` | `30` |
+| `create_access_log_group` | Create access log group | `bool` | `false` |
+| `access_log_retention_days` | Retention days for access logs | `number` | `30` |
+| `create_error_log_group` | Create error log group | `bool` | `false` |
+| `error_log_retention_days` | Retention days for error logs | `number` | `90` |
+| `create_application_log_stream` | Create application log stream | `bool` | `false` |
+| `create_system_log_stream` | Create system log stream | `bool` | `false` |
+| `create_access_log_stream` | Create access log stream | `bool` | `false` |
+| `create_error_log_stream` | Create error log stream | `bool` | `false` |
+| `create_error_metric_filter` | Create error metric filter | `bool` | `false` |
+| `error_metric_filter_pattern` | Pattern for error metric filter | `string` | `"[timestamp, level=ERROR, message]"` |
+| `create_access_metric_filter` | Create access metric filter | `bool` | `false` |
+| `access_metric_filter_pattern` | Pattern for access metric filter | `string` | `"[timestamp, ip, method, path, status]"` |
+| `create_error_log_alarm` | Create error log alarm | `bool` | `false` |
+| `error_log_alarm_threshold` | Threshold for error log alarm | `number` | `10` |
+| `error_log_alarm_actions` | Actions for error log alarm | `list(string)` | `[]` |
+| `create_access_log_alarm` | Create access log alarm | `bool` | `false` |
+| `access_log_alarm_threshold` | Threshold for access log alarm | `number` | `1000` |
+| `access_log_alarm_actions` | Actions for access log alarm | `list(string)` | `[]` |
+| `custom_log_groups` | Map of custom log groups | `map(object)` | `{}` |
+| `custom_log_streams` | Map of custom log streams | `map(object)` | `{}` |
+| `custom_metric_filters` | Map of custom metric filters | `map(object)` | `{}` |
+| `custom_log_alarms` | Map of custom log alarms | `map(object)` | `{}` |
+
+## 📤 Outputs
+
+### Core Wrapper Output
+
+| Name | Description |
+|------|-------------|
+| `wrapper` | Map of all outputs from the underlying module for each instance |
 
 ### Instance Outputs
 
-- `instance_ids` - Map of instance IDs
-- `instance_arns` - Map of instance ARNs
-- `instance_states` - Map of instance states
-- `instance_availability_zones` - Map of instance availability zones
-- `instance_amis` - Map of AMI IDs used to create instances
-- `instance_public_ips` - Map of public IP addresses assigned to instances
-- `instance_private_ips` - Map of private IP addresses assigned to instances
-- `instance_public_dns` - Map of public DNS names assigned to instances
-- `instance_private_dns` - Map of private DNS names assigned to instances
-- `instance_ipv6_addresses` - Map of IPv6 addresses assigned to instances
-- `instance_primary_network_interface_ids` - Map of primary network interface IDs
-- `instance_capacity_reservation_specifications` - Map of capacity reservation specifications
-- `instance_outpost_arns` - Map of outpost ARNs
-- `instance_password_data` - Map of password data for instances (sensitive)
-- `instance_tags_all` - Map of all tags assigned to instances
+| Name | Description |
+|------|-------------|
+| `instance_ids` | Map of instance IDs |
+| `instance_arns` | Map of instance ARNs |
+| `instance_states` | Map of instance states |
+| `instance_availability_zones` | Map of instance availability zones |
+| `instance_amis` | Map of AMI IDs used to create instances |
+| `instance_public_ips` | Map of public IP addresses assigned to instances |
+| `instance_private_ips` | Map of private IP addresses assigned to instances |
+| `instance_public_dns` | Map of public DNS names assigned to instances |
+| `instance_private_dns` | Map of private DNS names assigned to instances |
+| `instance_ipv6_addresses` | Map of IPv6 addresses assigned to instances |
+| `instance_primary_network_interface_ids` | Map of primary network interface IDs |
+| `instance_capacity_reservation_specifications` | Map of capacity reservation specifications |
+| `instance_outpost_arns` | Map of outpost ARNs |
+| `instance_password_data` | Map of password data for instances (sensitive) |
+| `instance_tags_all` | Map of all tags assigned to instances |
+
+### Security Group Outputs
+
+| Name | Description |
+|------|-------------|
+| `security_group_ids` | Map of security group IDs |
+| `security_group_arns` | Map of security group ARNs |
+| `security_group_names` | Map of security group names |
+
+### EIP Outputs
+
+| Name | Description |
+|------|-------------|
+| `eip_ids` | Map of EIP IDs |
+| `eip_public_ips` | Map of EIP public IPs |
+| `eip_public_ipv4_pools` | Map of EIP public IPv4 pools |
 
 ### Spot Instance Outputs
 
-- `spot_bid_statuses` - Map of spot bid statuses
-- `spot_request_states` - Map of spot request states
-- `spot_instance_ids` - Map of spot instance IDs
+| Name | Description |
+|------|-------------|
+| `spot_bid_statuses` | Map of spot bid statuses |
+| `spot_request_states` | Map of spot request states |
+| `spot_instance_ids` | Map of spot instance IDs |
 
 ### EBS Volume Outputs
 
-- `ebs_volumes` - Map of EBS volumes created and their attributes
+| Name | Description |
+|------|-------------|
+| `ebs_volumes` | Map of EBS volumes created and their attributes |
 
 ### IAM Role / Instance Profile Outputs
 
-- `iam_role_names` - Map of IAM role names
-- `iam_role_arns` - Map of IAM role ARNs
-- `iam_role_unique_ids` - Map of IAM role unique IDs
-- `iam_instance_profile_arns` - Map of IAM instance profile ARNs
-- `iam_instance_profile_ids` - Map of IAM instance profile IDs
-- `iam_instance_profile_uniques` - Map of IAM instance profile unique IDs
+| Name | Description |
+|------|-------------|
+| `iam_role_names` | Map of IAM role names |
+| `iam_role_arns` | Map of IAM role ARNs |
+| `iam_role_unique_ids` | Map of IAM role unique IDs |
+| `iam_instance_profile_arns` | Map of IAM instance profile ARNs |
+| `iam_instance_profile_ids` | Map of IAM instance profile IDs |
+| `iam_instance_profile_uniques` | Map of IAM instance profile unique IDs |
+
+### IAM Instance Profile Management Outputs
+
+| Name | Description |
+|------|-------------|
+| `instance_profiles` | Map of instance profiles created for existing IAM roles |
+| `instance_profile_names` | Map of instance profile names |
+| `instance_profile_arns` | Map of instance profile ARNs |
+| `instance_profile_ids` | Map of instance profile IDs |
+| `instance_profile_unique_ids` | Map of instance profile unique IDs |
+
+### CloudWatch Monitoring Outputs
+
+| Name | Description |
+|------|-------------|
+| `monitoring_alarms` | Map of monitoring alarms for each instance |
+| `monitoring_alarm_arns` | Map of monitoring alarm ARNs for each instance |
+| `monitoring_alarm_names` | Map of monitoring alarm names for each instance |
+| `monitoring_dashboards` | Map of monitoring dashboards for each instance |
+| `monitoring_dashboard_names` | Map of monitoring dashboard names for each instance |
+| `monitoring_dashboard_arns` | Map of monitoring dashboard ARNs for each instance |
+| `monitoring_summaries` | Map of monitoring summaries for each instance |
+
+### CloudWatch Logging Outputs
+
+| Name | Description |
+|------|-------------|
+| `logging_log_groups` | Map of logging log groups for each instance |
+| `logging_log_group_names` | Map of logging log group names for each instance |
+| `logging_log_group_arns` | Map of logging log group ARNs for each instance |
+| `logging_log_streams` | Map of logging log stream resources for each instance |
+| `logging_log_stream_names` | Map of logging log stream names for each instance |
+| `logging_metric_filters` | Map of logging metric filter resources for each instance |
+| `logging_metric_filter_names` | Map of logging metric filter names for each instance |
+| `logging_alarms` | Map of logging alarms for each instance |
+| `logging_alarm_names` | Map of logging alarm names for each instance |
+| `logging_alarm_arns` | Map of logging alarm ARNs for each instance |
+| `logging_summaries` | Map of logging summaries for each instance |
 
 ### Block Device Outputs
 
-- `root_block_devices` - Map of root block device information
-- `ebs_block_devices` - Map of EBS block device information
-- `ephemeral_block_devices` - Map of ephemeral block device information
+| Name | Description |
+|------|-------------|
+| `root_block_devices` | Map of root block device information |
+| `ebs_block_devices` | Map of EBS block device information |
+| `ephemeral_block_devices` | Map of ephemeral block device information |
 
 ## Requirements
 

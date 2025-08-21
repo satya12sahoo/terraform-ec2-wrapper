@@ -1,0 +1,11 @@
+# =============================================================================
+# Example Configuration for EC2 Instances with Logging
+# =============================================================================
+# Copy this file to terraform.tfvars and update the values
+
+# AWS Configuration
+aws_region = "us-east-1"
+vpc_id     = "vpc-12345678"
+subnet_id  = "subnet-12345678"
+key_name   = "my-key-pair"
+alert_email = "admin@example.com"

@@ -164,3 +164,168 @@ output "ephemeral_block_devices" {
   description = "Map of ephemeral block device information"
   value       = { for k, v in module.wrapper : k => v.ephemeral_block_device }
 }
+
+################################################################################
+# Security Group Outputs
+################################################################################
+
+output "security_group_ids" {
+  description = "Map of security group IDs"
+  value       = { for k, v in module.wrapper : k => v.security_group_id }
+}
+
+output "security_group_arns" {
+  description = "Map of security group ARNs"
+  value       = { for k, v in module.wrapper : k => v.security_group_arn }
+}
+
+output "security_group_names" {
+  description = "Map of security group names"
+  value       = { for k, v in module.wrapper : k => v.security_group_name }
+}
+
+################################################################################
+# EIP Outputs
+################################################################################
+
+output "eip_ids" {
+  description = "Map of EIP IDs"
+  value       = { for k, v in module.wrapper : k => v.eip_id }
+}
+
+output "eip_public_ips" {
+  description = "Map of EIP public IPs"
+  value       = { for k, v in module.wrapper : k => v.eip_public_ip }
+}
+
+output "eip_public_ipv4_pools" {
+  description = "Map of EIP public IPv4 pools"
+  value       = { for k, v in module.wrapper : k => v.eip_public_ipv4_pool }
+}
+
+################################################################################
+# IAM Instance Profile Management Outputs
+################################################################################
+
+output "instance_profiles" {
+  description = "Map of instance profiles created for existing IAM roles"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? module.iam_instance_profiles : {}
+}
+
+output "instance_profile_names" {
+  description = "Map of instance profile names"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_name } : {}
+}
+
+output "instance_profile_arns" {
+  description = "Map of instance profile ARNs"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_arn } : {}
+}
+
+output "instance_profile_ids" {
+  description = "Map of instance profile IDs"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_id } : {}
+}
+
+output "instance_profile_unique_ids" {
+  description = "Map of instance profile unique IDs"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_unique_id } : {}
+}
+
+################################################################################
+# Monitoring Outputs
+################################################################################
+
+output "monitoring_alarms" {
+  description = "Map of monitoring alarms for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarms } : {}
+}
+
+output "monitoring_alarm_arns" {
+  description = "Map of monitoring alarm ARNs for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarm_arns } : {}
+}
+
+output "monitoring_alarm_names" {
+  description = "Map of monitoring alarm names for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarm_names } : {}
+}
+
+output "monitoring_dashboards" {
+  description = "Map of monitoring dashboards for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard } : {}
+}
+
+output "monitoring_dashboard_names" {
+  description = "Map of monitoring dashboard names for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard_name } : {}
+}
+
+output "monitoring_dashboard_arns" {
+  description = "Map of monitoring dashboard ARNs for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard_arn } : {}
+}
+
+output "monitoring_summaries" {
+  description = "Map of monitoring summaries for each instance"
+  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.monitoring_summary } : {}
+}
+
+################################################################################
+# Logging Outputs
+################################################################################
+
+output "logging_log_groups" {
+  description = "Map of logging log groups for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_groups } : {}
+}
+
+output "logging_log_group_names" {
+  description = "Map of logging log group names for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_groups } : {}
+}
+
+output "logging_log_group_arns" {
+  description = "Map of logging log group ARNs for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_groups } : {}
+}
+
+output "logging_log_streams" {
+  description = "Map of logging log streams for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_streams } : {}
+}
+
+output "logging_log_stream_names" {
+  description = "Map of logging log stream names for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_streams } : {}
+}
+
+output "logging_metric_filters" {
+  description = "Map of logging metric filters for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_metric_filters } : {}
+}
+
+output "logging_metric_filter_names" {
+  description = "Map of logging metric filter names for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_metric_filters } : {}
+}
+
+output "logging_alarms" {
+  description = "Map of logging alarms for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_alarms } : {}
+}
+
+output "logging_alarm_names" {
+  description = "Map of logging alarm names for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_alarms } : {}
+}
+
+output "logging_alarm_arns" {
+  description = "Map of logging alarm ARNs for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.all_log_alarms } : {}
+}
+
+output "logging_summaries" {
+  description = "Map of logging summaries for each instance"
+  value       = try(var.defaults.create_logging, false) ? { for k, v in module.instance_logging : k => v.logging_summary } : {}
+}
