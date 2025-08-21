@@ -173,6 +173,8 @@ module "ec2_instances" {
 |------|-------------|------|---------|:--------:|
 | `defaults` | Map of default values which will be used for each item | `any` | `{}` | no |
 | `items` | Maps of items to create instances from. Values are passed through to the module | `any` | `{}` | no |
+| `instance_profiles` | Map of instance profiles to create for existing IAM roles. Each key represents a profile name. | `map(object({...}))` | `{}` | no |
+| `common_tags` | Common tags to apply to all resources created by the wrapper module. | `map(string)` | `{}` | no |
 
 ### Supported Variables in `defaults` and `items`
 
@@ -304,6 +306,12 @@ Map of all outputs from the underlying module for each instance.
 - `iam_instance_profile_ids` - Map of IAM instance profile IDs
 - `iam_instance_profile_uniques` - Map of IAM instance profile unique IDs
 
+### Instance Profile Outputs (for existing IAM roles)
+
+- `instance_profiles` - Map of all instance profile resources
+- `instance_profile_names` - Map of instance profile names
+- `instance_profile_arns` - Map of instance profile ARNs
+
 ### Block Device Outputs
 
 - `root_block_devices` - Map of root block device information
@@ -328,6 +336,7 @@ Map of all outputs from the underlying module for each instance.
 | Name | Source | Version |
 |------|--------|---------|
 | wrapper | github.com/satya12sahoo/terraform-aws-ec2-instance | n/a |
+| iam_instance_profiles | ../terraform-aws-ec2-base/iam | n/a |
 
 ## License
 

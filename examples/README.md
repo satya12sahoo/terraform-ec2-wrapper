@@ -30,6 +30,46 @@ An example showing how to create multiple spot instances with different configur
 **Files:**
 - `main.tf` - Main configuration file
 
+### IAM and Security Group Examples (`iam-security-group-examples/`)
+
+Comprehensive examples showing different scenarios for IAM roles and security groups.
+
+**Features demonstrated:**
+- Creating IAM roles and security groups from scratch
+- Using existing IAM roles and security groups
+- Mixed scenarios (create one, use existing for the other)
+- Multiple instances with different configurations
+
+**Files:**
+- `main.tf` - Main configuration file
+- `README.md` - Detailed documentation
+
+### Infrastructure Integration Example (`with-infrastructure/`)
+
+Example showing how to integrate the wrapper with infrastructure modules.
+
+**Features demonstrated:**
+- Integration with autoscaling, load balancers, and monitoring
+- Using wrapper outputs with other modules
+- Complex infrastructure setup
+
+**Files:**
+- `main.tf` - Main configuration file
+- `README.md` - Detailed documentation
+
+### Existing IAM Roles Example (`with-existing-iam/`)
+
+Example showing how to create instance profiles for existing IAM roles and use them with the wrapper.
+
+**Features demonstrated:**
+- Creating instance profiles for existing IAM roles using `terraform-aws-ec2-base/iam`
+- Using existing instance profiles with the wrapper
+- Handling scenarios where you have existing IAM roles without instance profiles
+
+**Files:**
+- `main.tf` - Main configuration file
+- `README.md` - Detailed documentation
+
 ## Usage
 
 To use any of these examples:

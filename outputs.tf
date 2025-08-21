@@ -85,6 +85,25 @@ output "instance_tags_all" {
 }
 
 ################################################################################
+# Instance Profile Outputs
+################################################################################
+
+output "instance_profiles" {
+  description = "Map of instance profiles created for existing IAM roles"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? module.iam_instance_profiles : {}
+}
+
+output "instance_profile_names" {
+  description = "Map of instance profile names"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_name } : {}
+}
+
+output "instance_profile_arns" {
+  description = "Map of instance profile ARNs"
+  value       = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? { for k, v in module.iam_instance_profiles : k => v.instance_profile_arn } : {}
+}
+
+################################################################################
 # Spot Instance Outputs
 ################################################################################
 

@@ -29,7 +29,9 @@ module "wrapper" {
   hibernation                          = try(each.value.hibernation, var.defaults.hibernation, null)
   host_id                              = try(each.value.host_id, var.defaults.host_id, null)
   host_resource_group_arn              = try(each.value.host_resource_group_arn, var.defaults.host_resource_group_arn, null)
-  iam_instance_profile                 = try(each.value.iam_instance_profile, var.defaults.iam_instance_profile, null)
+  iam_instance_profile                 = try(each.value.iam_instance_profile, var.defaults.iam_instance_profile, 
+    try(var.defaults.create_instance_profiles_for_existing_roles, false) ? module.iam_instance_profiles[each.key].instance_profile_name : null
+  )
   iam_role_description                 = try(each.value.iam_role_description, var.defaults.iam_role_description, null)
   iam_role_name                        = try(each.value.iam_role_name, var.defaults.iam_role_name, null)
   iam_role_path                        = try(each.value.iam_role_path, var.defaults.iam_role_path, null)
