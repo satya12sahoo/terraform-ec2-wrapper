@@ -6,7 +6,7 @@
 
 # Create instance profiles for existing IAM roles
 module "iam_instance_profiles" {
-  source = "../terraform-aws-ec2-base/iam"
+  source = "github.com/satya12sahoo/terraform-aws-ec2-base/blob/master/iam"
   for_each = try(var.defaults.create_instance_profiles_for_existing_roles, false) ? var.items : {}
 
   # Instance profile configuration

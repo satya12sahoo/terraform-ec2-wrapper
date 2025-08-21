@@ -6,7 +6,7 @@
 
 # Create monitoring resources for each EC2 instance
 module "instance_monitoring" {
-  source = "../terraform-aws-ec2-base/monitoring"
+  source = "satya12sahoo/terraform-aws-ec2-base/tree/master/monitoring"
   for_each = try(var.defaults.create_monitoring, false) ? var.items : {}
 
   # Instance information
