@@ -1,0 +1,17 @@
+# =============================================================================
+# TERRAFORM.TFVARS EXAMPLE FOR MONITORING
+# =============================================================================
+# Copy this file to terraform.tfvars and update the values
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Network Configuration
+vpc_id     = "vpc-12345678"
+subnet_id  = "subnet-12345678"
+
+# SSH Access
+key_name   = "my-key-pair"
+
+# Monitoring Alerts
+alert_email = "admin@example.com"

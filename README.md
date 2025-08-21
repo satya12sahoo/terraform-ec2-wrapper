@@ -1,18 +1,31 @@
 # Terraform AWS EC2 Instance Wrapper
 
-This module is a wrapper around the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) module that provides a simplified interface for creating multiple EC2 instances with shared defaults.
+A comprehensive wrapper module around [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) that provides simplified multi-instance management with advanced features including IAM instance profile management and CloudWatch monitoring.
 
-## Features
+## 🚀 Features
 
-- **Simplified Configuration**: Create multiple EC2 instances with shared default values
+- **Multi-Instance Management**: Create multiple EC2 instances with shared defaults and individual overrides
+- **IAM Instance Profile Management**: Create instance profiles for existing IAM roles
+- **CloudWatch Monitoring**: Comprehensive monitoring with alarms and dashboards
 - **Type Safety**: Full type definitions for all variables and outputs
-- **Flexible Overrides**: Override any default value on a per-instance basis
-- **Complete Output Exposure**: All outputs from the underlying module are available
+- **Flexible Configuration**: Override any default value on a per-instance basis
+- **Complete Output Exposure**: All outputs from underlying modules are available
 - **Backward Compatible**: Maintains compatibility with existing configurations
 
-## Usage
+## 📋 Table of Contents
 
-### Basic Example
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [Usage Examples](#usage-examples)
+- [Inputs](#inputs)
+- [Outputs](#outputs)
+- [Requirements](#requirements)
+- [Modules](#modules)
+- [License](#license)
+
+## 🏃‍♂️ Quick Start
+
+### Basic Multi-Instance Setup
 
 ```hcl
 module "ec2_instances" {
@@ -30,28 +43,160 @@ module "ec2_instances" {
   items = {
     web-server-1 = {
       name = "web-server-1"
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     web-server-2 = {
       name = "web-server-2"
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     database-server = {
       name         = "database-server"
       instance_type = "t3.small"
-      tags = {
-        Role = "database"
-      }
+      tags = { Role = "database" }
     }
   }
 }
 ```
 
-### Advanced Example with Security Groups
+### With IAM Instance Profile Management
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable instance profile creation for existing roles
+    create_instance_profiles_for_existing_roles = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      # Existing IAM role name
+      iam_role_name = "existing-web-role"
+      # Instance profile will be created automatically
+      instance_profile_name = "web-instance-profile"
+      tags = { Role = "web-server" }
+    }
+    
+    app-server = {
+      name = "app-server"
+      iam_role_name = "existing-app-role"
+      instance_profile_name = "app-instance-profile"
+      tags = { Role = "app-server" }
+    }
+  }
+}
+```
+
+### With Comprehensive Monitoring
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # Enable monitoring
+    create_monitoring = true
+    
+    # CPU monitoring
+    create_cpu_alarm = true
+    cpu_threshold = 75
+    cpu_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Memory monitoring (requires CloudWatch Agent)
+    create_memory_alarm = true
+    memory_threshold = 80
+    memory_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Disk monitoring (requires CloudWatch Agent)
+    create_disk_alarm = true
+    disk_threshold = 85
+    disk_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Network monitoring
+    create_network_in_alarm = true
+    create_network_out_alarm = true
+    network_in_threshold = 500000000  # 500 MB
+    network_out_threshold = 500000000
+    
+    # Status check monitoring
+    create_status_check_alarm = true
+    status_check_alarm_actions = [aws_sns_topic.alerts.arn]
+    
+    # Dashboard
+    create_dashboard = true
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    web-server = {
+      name = "web-server"
+      # Instance-specific monitoring overrides
+      cpu_threshold = 70  # Lower threshold for web server
+      memory_threshold = 75
+      tags = { Role = "web-server" }
+    }
+    
+    database-server = {
+      name = "database-server"
+      instance_type = "t3.small"
+      # Conservative thresholds for database
+      cpu_threshold = 60
+      memory_threshold = 70
+      disk_threshold = 80
+      tags = { Role = "database" }
+    }
+  }
+}
+```
+
+## 🧠 Core Concepts
+
+### 1. Defaults and Items Pattern
+
+The module uses a two-tier configuration approach:
+
+- **`defaults`**: Shared configuration applied to all instances
+- **`items`**: Individual instance configurations that override defaults
+
+### 2. IAM Instance Profile Management
+
+The module can create instance profiles for existing IAM roles:
+
+- **Toggle**: `create_instance_profiles_for_existing_roles = true`
+- **Automatic Creation**: Instance profiles created based on `items` configuration
+- **Integration**: Automatically attached to EC2 instances
+
+### 3. CloudWatch Monitoring
+
+Comprehensive monitoring capabilities:
+
+- **CPU Monitoring**: Built-in EC2 metrics
+- **Memory Monitoring**: Requires CloudWatch Agent
+- **Disk Monitoring**: Requires CloudWatch Agent
+- **Network Monitoring**: Built-in EC2 metrics
+- **Status Check Monitoring**: Instance health monitoring
+- **Dashboards**: Visual monitoring interface
+
+## 📖 Usage Examples
+
+### Advanced Security Group Configuration
 
 ```hcl
 module "ec2_instances" {
@@ -71,12 +216,6 @@ module "ec2_instances" {
       }
     }
     
-    # IAM configuration
-    create_iam_instance_profile = true
-    iam_role_policies = {
-      s3_read_only = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-    }
-    
     tags = {
       Environment = "production"
       Project     = "my-project"
@@ -87,7 +226,7 @@ module "ec2_instances" {
     web-server = {
       name = "web-server"
       
-      # Override security group for this instance
+      # Web server specific ingress rules
       security_group_ingress_rules = {
         http = {
           from_port   = 80
@@ -105,16 +244,14 @@ module "ec2_instances" {
         }
       }
       
-      tags = {
-        Role = "web-server"
-      }
+      tags = { Role = "web-server" }
     }
     
     database-server = {
       name         = "database-server"
       instance_type = "t3.small"
       
-      # Override security group for database
+      # Database specific ingress rules
       security_group_ingress_rules = {
         postgres = {
           from_port   = 5432
@@ -125,15 +262,13 @@ module "ec2_instances" {
         }
       }
       
-      tags = {
-        Role = "database"
-      }
+      tags = { Role = "database" }
     }
   }
 }
 ```
 
-### Spot Instance Example
+### Spot Instance Configuration
 
 ```hcl
 module "ec2_instances" {
@@ -167,125 +302,174 @@ module "ec2_instances" {
 }
 ```
 
-## Inputs
+### EBS Volume Configuration
+
+```hcl
+module "ec2_instances" {
+  source = "github.com/satya12sahoo/terraform-ec2-wrapper"
+
+  defaults = {
+    instance_type = "t3.micro"
+    subnet_id     = "subnet-12345678"
+    
+    # EBS volume configuration
+    ebs_volumes = {
+      data = {
+        device_name = "/dev/sdf"
+        volume_size = 100
+        volume_type = "gp3"
+        encrypted    = true
+        tags = {
+          Name = "data-volume"
+        }
+      }
+    }
+    
+    tags = {
+      Environment = "production"
+      Project     = "my-project"
+    }
+  }
+
+  items = {
+    app-server = {
+      name = "app-server"
+      
+      # Instance-specific EBS volumes
+      ebs_volumes = {
+        data = {
+          device_name = "/dev/sdf"
+          volume_size = 200
+          volume_type = "gp3"
+          encrypted    = true
+          tags = {
+            Name = "app-data-volume"
+          }
+        }
+        logs = {
+          device_name = "/dev/sdg"
+          volume_size = 50
+          volume_type = "gp3"
+          encrypted    = true
+          tags = {
+            Name = "app-logs-volume"
+          }
+        }
+      }
+      
+      tags = { Role = "app-server" }
+    }
+  }
+}
+```
+
+## 📥 Inputs
+
+### Core Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| `defaults` | Map of default values which will be used for each item | `any` | `{}` | no |
-| `items` | Maps of items to create instances from. Values are passed through to the module | `any` | `{}` | no |
-| `instance_profiles` | Map of instance profiles to create for existing IAM roles. Each key represents a profile name. | `map(object({...}))` | `{}` | no |
-| `common_tags` | Common tags to apply to all resources created by the wrapper module. | `map(string)` | `{}` | no |
+| `defaults` | Map of default values for all instances | `any` | `{}` | no |
+| `items` | Map of individual instance configurations | `any` | `{}` | no |
+| `create_instance_profiles_for_existing_roles` | Enable instance profile creation for existing IAM roles | `bool` | `false` | no |
 
 ### Supported Variables in `defaults` and `items`
 
-The following variables can be used in both `defaults` and `items` objects. Values in `items` will override corresponding values in `defaults`:
+All variables from the underlying `terraform-aws-ec2-instance` module are supported, plus additional wrapper-specific variables:
 
-| Variable | Description | Type | Default Value |
-|----------|-------------|------|---------------|
-| `ami` | ID of AMI to use for the instance | `string` | `null` |
-| `ami_ssm_parameter` | SSM parameter name for the AMI ID | `string` | `"/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"` |
-| `associate_public_ip_address` | Whether to associate a public IP address with an instance in a VPC | `bool` | `null` |
-| `availability_zone` | AZ to start the instance in | `string` | `null` |
-| `capacity_reservation_specification` | Describes an instance's Capacity Reservation targeting option | `object` | `null` |
-| `cpu_credits` | The credit option for CPU usage (unlimited or standard) | `string` | `null` |
-| `cpu_options` | Defines CPU options to apply to the instance at launch time | `object` | `null` |
-| `create` | Whether to create an instance | `bool` | `true` |
-| `create_eip` | Determines whether a public EIP will be created and associated with the instance | `bool` | `false` |
-| `create_iam_instance_profile` | Determines whether an IAM instance profile is created | `bool` | `false` |
-| `create_security_group` | Determines whether a security group will be created | `bool` | `true` |
-| `create_spot_instance` | Depicts if the instance is a spot instance | `bool` | `false` |
-| `disable_api_stop` | If true, enables EC2 Instance Stop Protection | `bool` | `null` |
-| `disable_api_termination` | If true, enables EC2 Instance Termination Protection | `bool` | `null` |
-| `ebs_optimized` | If true, the launched EC2 instance will be EBS-optimized | `bool` | `null` |
-| `ebs_volumes` | Additional EBS volumes to attach to the instance | `map(object)` | `null` |
-| `eip_domain` | Indicates if this EIP is for use in VPC | `string` | `"vpc"` |
-| `eip_tags` | A map of additional tags to add to the eip | `map(string)` | `{}` |
-| `enable_primary_ipv6` | Whether to assign a primary IPv6 Global Unicast Address (GUA) to the instance | `bool` | `null` |
-| `enable_volume_tags` | Whether to enable volume tags | `bool` | `true` |
-| `enclave_options_enabled` | Whether Nitro Enclaves will be enabled on the instance | `bool` | `null` |
-| `ephemeral_block_device` | Customize Ephemeral (also known as Instance Store) volumes on the instance | `map(object)` | `null` |
-| `get_password_data` | If true, wait for password data to become available and retrieve it | `bool` | `null` |
-| `hibernation` | If true, the launched EC2 instance will support hibernation | `bool` | `null` |
-| `host_id` | ID of a dedicated host that the instance will be assigned to | `string` | `null` |
-| `host_resource_group_arn` | ARN of the host resource group in which to launch the instances | `string` | `null` |
-| `iam_instance_profile` | IAM Instance Profile to launch the instance with | `string` | `null` |
-| `iam_role_description` | Description of the role | `string` | `null` |
-| `iam_role_name` | Name to use on IAM role created | `string` | `null` |
-| `iam_role_path` | IAM role path | `string` | `null` |
-| `iam_role_permissions_boundary` | ARN of the policy that is used to set the permissions boundary for the IAM role | `string` | `null` |
-| `iam_role_policies` | Policies attached to the IAM role | `map(string)` | `{}` |
-| `iam_role_tags` | A map of additional tags to add to the IAM role/profile created | `map(string)` | `{}` |
-| `iam_role_use_name_prefix` | Determines whether the IAM role name is used as a prefix | `bool` | `true` |
-| `ignore_ami_changes` | Whether changes to the AMI ID changes should be ignored by Terraform | `bool` | `false` |
-| `instance_initiated_shutdown_behavior` | Shutdown behavior for the instance | `string` | `null` |
-| `instance_market_options` | The market (purchasing) option for the instance | `object` | `null` |
-| `instance_tags` | Additional tags for the instance | `map(string)` | `{}` |
-| `instance_type` | The type of instance to start | `string` | `"t3.micro"` |
-| `ipv6_address_count` | A number of IPv6 addresses to associate with the primary network interface | `number` | `null` |
-| `ipv6_addresses` | Specify one or more IPv6 addresses from the range of the subnet | `list(string)` | `null` |
-| `key_name` | Key name of the Key Pair to use for the instance | `string` | `null` |
-| `launch_template` | Specifies a Launch Template to configure the instance | `object` | `null` |
-| `maintenance_options` | The maintenance options for the instance | `object` | `null` |
-| `metadata_options` | Customize the metadata options of the instance | `object` | `{http_endpoint = "enabled", http_put_response_hop_limit = 1, http_tokens = "required"}` |
-| `monitoring` | If true, the launched EC2 instance will have detailed monitoring enabled | `bool` | `null` |
-| `name` | Name to be used on EC2 instance created | `string` | `""` |
-| `network_interface` | Customize network interfaces to be attached at instance boot time | `map(object)` | `null` |
-| `placement_group` | The Placement Group to start the instance in | `string` | `null` |
-| `placement_partition_number` | Number of the partition the instance is in | `number` | `null` |
-| `private_dns_name_options` | Customize the private DNS name options of the instance | `object` | `null` |
-| `private_ip` | Private IP address to associate with the instance in a VPC | `string` | `null` |
-| `putin_khuylo` | Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? | `bool` | `true` |
-| `region` | Region where the resource(s) will be managed | `string` | `null` |
-| `root_block_device` | Customize details about the root block device of the instance | `object` | `null` |
-| `secondary_private_ips` | A list of secondary private IPv4 addresses to assign to the instance's primary network interface | `list(string)` | `null` |
-| `security_group_description` | Description of the security group | `string` | `null` |
-| `security_group_egress_rules` | Egress rules to add to the security group | `map(object)` | `{ipv4_default = {...}, ipv6_default = {...}}` |
-| `security_group_ingress_rules` | Ingress rules to add to the security group | `map(object)` | `null` |
-| `security_group_name` | Name to use on security group created | `string` | `null` |
-| `security_group_tags` | A map of additional tags to add to the security group created | `map(string)` | `{}` |
-| `security_group_use_name_prefix` | Determines whether the security group name is used as a prefix | `bool` | `true` |
-| `security_group_vpc_id` | VPC ID to create the security group in | `string` | `null` |
-| `source_dest_check` | Controls if traffic is routed to the instance when the destination address does not match the instance | `bool` | `null` |
-| `spot_instance_interruption_behavior` | Indicates Spot instance behavior when it is interrupted | `string` | `null` |
-| `spot_launch_group` | A launch group is a group of spot instances that launch together and terminate together | `string` | `null` |
-| `spot_price` | The maximum price to request on the spot market | `string` | `null` |
-| `spot_type` | If set to one-time, after the instance is terminated, the spot request will be closed | `string` | `null` |
-| `spot_valid_from` | The start date and time of the request, in UTC RFC3339 format | `string` | `null` |
-| `spot_valid_until` | The end date and time of the request, in UTC RFC3339 format | `string` | `null` |
-| `spot_wait_for_fulfillment` | If set, Terraform will wait for the Spot Request to be fulfilled | `bool` | `null` |
-| `subnet_id` | The VPC Subnet ID to launch in | `string` | `null` |
-| `tags` | A mapping of tags to assign to the resource | `map(string)` | `{}` |
-| `tenancy` | The tenancy of the instance (if the instance is running in a VPC) | `string` | `null` |
-| `timeouts` | Define maximum timeout for creating, updating, and deleting EC2 instance resources | `map(string)` | `{}` |
-| `user_data` | The user data to provide when launching the instance | `string` | `null` |
-| `user_data_base64` | Can be used instead of user_data to pass base64-encoded binary data directly | `string` | `null` |
-| `user_data_replace_on_change` | When used in combination with user_data or user_data_base64 will trigger a destroy and recreate | `bool` | `null` |
-| `volume_tags` | A mapping of tags to assign to the devices created by the instance at launch time | `map(string)` | `{}` |
-| `vpc_security_group_ids` | A list of security group IDs to associate with | `list(string)` | `[]` |
+#### EC2 Instance Variables
+- `ami`, `ami_ssm_parameter`, `instance_type`, `subnet_id`
+- `key_name`, `vpc_security_group_ids`, `associate_public_ip_address`
+- `availability_zone`, `private_ip`, `secondary_private_ips`
+- `root_block_device`, `ebs_volumes`, `ephemeral_block_device`
+- `user_data`, `user_data_base64`, `metadata_options`
+- `monitoring`, `disable_api_termination`, `disable_api_stop`
+- `hibernation`, `ebs_optimized`, `placement_group`
+- `tenancy`, `cpu_credits`, `cpu_options`
+- `capacity_reservation_specification`, `launch_template`
+- `instance_market_options`, `maintenance_options`
+- `private_dns_name_options`, `enable_primary_ipv6`
+- `ipv6_address_count`, `ipv6_addresses`, `source_dest_check`
+- `get_password_data`, `timeouts`, `tags`, `volume_tags`
+- `enable_volume_tags`, `ignore_ami_changes`, `putin_khuylo`
 
-## Outputs
+#### Security Group Variables
+- `create_security_group`, `security_group_name`, `security_group_description`
+- `security_group_vpc_id`, `security_group_use_name_prefix`
+- `security_group_ingress_rules`, `security_group_egress_rules`
+- `security_group_tags`
 
-### `wrapper`
+#### IAM Variables
+- `create_iam_instance_profile`, `iam_instance_profile`
+- `iam_role_name`, `iam_role_description`, `iam_role_path`
+- `iam_role_permissions_boundary`, `iam_role_policies`
+- `iam_role_tags`, `iam_role_use_name_prefix`
 
-Map of all outputs from the underlying module for each instance.
+#### Spot Instance Variables
+- `create_spot_instance`, `spot_price`, `spot_type`
+- `spot_launch_group`, `spot_valid_from`, `spot_valid_until`
+- `spot_wait_for_fulfillment`, `spot_instance_interruption_behavior`
 
-### Instance Outputs
+#### EIP Variables
+- `create_eip`, `eip_domain`, `eip_tags`
+
+#### Network Interface Variables
+- `network_interface`, `placement_partition_number`
+- `host_id`, `host_resource_group_arn`
+
+#### Instance Profile Management Variables (Wrapper-Specific)
+- `create_instance_profile`, `instance_profile_name`
+- `instance_profile_path`, `instance_profile_description`
+- `instance_profile_tags`, `enable_instance_profile_rotation`
+- `instance_profile_permissions_boundary`
+
+#### Monitoring Variables (Wrapper-Specific)
+- `create_monitoring`, `create_cpu_alarm`, `cpu_threshold`
+- `cpu_evaluation_periods`, `cpu_period`, `cpu_alarm_actions`
+- `cpu_ok_actions`, `create_memory_alarm`, `memory_threshold`
+- `memory_evaluation_periods`, `memory_period`, `memory_alarm_actions`
+- `create_disk_alarm`, `disk_threshold`, `disk_evaluation_periods`
+- `disk_period`, `disk_filesystem`, `disk_mount_path`
+- `disk_alarm_actions`, `create_network_in_alarm`, `network_in_threshold`
+- `network_in_evaluation_periods`, `network_in_period`, `network_in_alarm_actions`
+- `create_network_out_alarm`, `network_out_threshold`
+- `network_out_evaluation_periods`, `network_out_period`, `network_out_alarm_actions`
+- `create_status_check_alarm`, `status_check_evaluation_periods`
+- `status_check_period`, `status_check_alarm_actions`
+- `create_dashboard`, `dashboard_name`
+
+## 📤 Outputs
+
+### EC2 Instance Outputs
 
 - `instance_ids` - Map of instance IDs
 - `instance_arns` - Map of instance ARNs
-- `instance_states` - Map of instance states
-- `instance_availability_zones` - Map of instance availability zones
-- `instance_amis` - Map of AMI IDs used to create instances
-- `instance_public_ips` - Map of public IP addresses assigned to instances
-- `instance_private_ips` - Map of private IP addresses assigned to instances
-- `instance_public_dns` - Map of public DNS names assigned to instances
-- `instance_private_dns` - Map of private DNS names assigned to instances
-- `instance_ipv6_addresses` - Map of IPv6 addresses assigned to instances
-- `instance_primary_network_interface_ids` - Map of primary network interface IDs
-- `instance_capacity_reservation_specifications` - Map of capacity reservation specifications
-- `instance_outpost_arns` - Map of outpost ARNs
-- `instance_password_data` - Map of password data for instances (sensitive)
-- `instance_tags_all` - Map of all tags assigned to instances
+- `instance_public_ips` - Map of public IP addresses
+- `instance_private_ips` - Map of private IP addresses
+- `instance_public_dns` - Map of public DNS names
+- `instance_private_dns` - Map of private DNS names
+- `instance_key_names` - Map of key pair names
+- `instance_subnet_ids` - Map of subnet IDs
+- `instance_vpc_security_group_ids` - Map of security group IDs
+- `instance_root_block_device` - Map of root block device configurations
+- `instance_ebs_block_device` - Map of EBS block device configurations
+- `instance_metadata_options` - Map of metadata options
+- `instance_network_interface_ids` - Map of network interface IDs
+- `instance_primary_network_interface_id` - Map of primary network interface IDs
+- `instance_outpost_arn` - Map of outpost ARNs
+- `instance_password_data` - Map of password data (sensitive)
+- `instance_placement_group` - Map of placement groups
+- `instance_placement_partition_number` - Map of placement partition numbers
+- `instance_ram_disk_id` - Map of RAM disk IDs
+- `instance_security_groups` - Map of security groups
+- `instance_source_dest_check` - Map of source/destination check settings
+- `instance_spot_bid_status` - Map of spot bid statuses
+- `instance_spot_instance_id` - Map of spot instance IDs
+- `instance_spot_request_state` - Map of spot request states
+- `instance_state` - Map of instance states
+- `instance_tenancy` - Map of tenancy settings
+- `instance_tags_all` - Map of all tags
+- `instance_volume_tags_all` - Map of all volume tags
 
 ### Spot Instance Outputs
 
@@ -295,7 +479,7 @@ Map of all outputs from the underlying module for each instance.
 
 ### EBS Volume Outputs
 
-- `ebs_volumes` - Map of EBS volumes created and their attributes
+- `ebs_volumes` - Map of EBS volumes and their attributes
 
 ### IAM Role / Instance Profile Outputs
 
@@ -311,6 +495,18 @@ Map of all outputs from the underlying module for each instance.
 - `instance_profiles` - Map of all instance profile resources
 - `instance_profile_names` - Map of instance profile names
 - `instance_profile_arns` - Map of instance profile ARNs
+- `instance_profile_ids` - Map of instance profile IDs
+- `instance_profile_unique_ids` - Map of instance profile unique IDs
+
+### Monitoring Outputs
+
+- `monitoring_alarms` - Map of monitoring alarms for each instance
+- `monitoring_alarm_arns` - Map of monitoring alarm ARNs
+- `monitoring_alarm_names` - Map of monitoring alarm names
+- `monitoring_dashboards` - Map of monitoring dashboards
+- `monitoring_dashboard_names` - Map of monitoring dashboard names
+- `monitoring_dashboard_arns` - Map of monitoring dashboard ARNs
+- `monitoring_summaries` - Map of monitoring summaries
 
 ### Block Device Outputs
 
@@ -318,30 +514,42 @@ Map of all outputs from the underlying module for each instance.
 - `ebs_block_devices` - Map of EBS block device information
 - `ephemeral_block_devices` - Map of ephemeral block device information
 
-## Requirements
+### Security Group Outputs
+
+- `security_group_ids` - Map of security group IDs
+- `security_group_arns` - Map of security group ARNs
+- `security_group_names` - Map of security group names
+
+### EIP Outputs
+
+- `eip_ids` - Map of EIP IDs
+- `eip_arns` - Map of EIP ARNs
+- `eip_public_ips` - Map of EIP public IPs
+- `eip_public_dns` - Map of EIP public DNS names
+
+### Deployment Summary
+
+- `deployment_summary` - Summary of all deployed resources
+
+## 📋 Requirements
 
 | Name | Version |
 |------|---------|
 | terraform | >= 1.5.7 |
 | aws | >= 6.0 |
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| aws | >= 6.0 |
-
-## Modules
+## 🔧 Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | wrapper | github.com/satya12sahoo/terraform-aws-ec2-instance | n/a |
 | iam_instance_profiles | ../terraform-aws-ec2-base/iam | n/a |
+| instance_monitoring | ../terraform-aws-ec2-base/monitoring | n/a |
 
-## License
+## 📄 License
 
 This module is licensed under the same license as the underlying `terraform-aws-ec2-instance` module.
 
-## Contributing
+## 🤝 Contributing
 
 This module is a wrapper around the official AWS EC2 instance module. For issues related to the core EC2 functionality, please refer to the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) repository.
