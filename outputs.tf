@@ -382,45 +382,6 @@ output "instance_profile_tags_all" {
 }
 
 # =============================================================================
-# MONITORING OUTPUTS
-# =============================================================================
-
-output "monitoring_alarms" {
-  description = "Map of monitoring alarms for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarms } : {}
-}
-
-output "monitoring_alarm_arns" {
-  description = "Map of monitoring alarm ARNs for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarm_arns } : {}
-}
-
-output "monitoring_alarm_names" {
-  description = "Map of monitoring alarm names for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.all_alarm_names } : {}
-}
-
-output "monitoring_dashboards" {
-  description = "Map of monitoring dashboards for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard } : {}
-}
-
-output "monitoring_dashboard_names" {
-  description = "Map of monitoring dashboard names for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard_name } : {}
-}
-
-output "monitoring_dashboard_arns" {
-  description = "Map of monitoring dashboard ARNs for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.dashboard_arn } : {}
-}
-
-output "monitoring_summaries" {
-  description = "Map of monitoring summaries for each instance"
-  value       = try(var.defaults.create_monitoring, false) ? { for k, v in module.instance_monitoring : k => v.monitoring_summary } : {}
-}
-
-# =============================================================================
 # COMBINED OUTPUTS
 # =============================================================================
 
