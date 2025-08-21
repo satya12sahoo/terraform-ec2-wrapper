@@ -336,3 +336,4 @@ This module is licensed under the same license as the underlying `terraform-aws-
 ## Contributing
 
 This module is a wrapper around the official AWS EC2 instance module. For issues related to the core EC2 functionality, please refer to the [terraform-aws-ec2-instance](https://github.com/terraform-aws-modules/terraform-aws-ec2-instance) repository.
+# Updated at Thu Aug 21 23:17:32 IST 2025
